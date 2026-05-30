@@ -1,4 +1,7 @@
 /node_modules
-/public/build
+/.wxt
+/.output
+/stats.html
 *.crx
 *.pem
+.DS_Store

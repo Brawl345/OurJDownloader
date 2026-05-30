@@ -4,38 +4,39 @@ This file provides guidance to LLMs when working with code in this repository.
 
 ## Overview
 
-Chrome/Firefox web extension that communicates with the JDownloader API. Code is written in TypeScript, linted with
-Biome, and built with ESBuild. Use Manifest V3.
+Chrome/Firefox web extension that communicates with the MyJDownloader API. Code is TypeScript + Vue 3 (`<script setup>`,
+scoped styles), built with [WXT](https://wxt.dev) (Vite), linted/formatted with Biome, and tested with Vitest. Manifest V3.
 
 ## Architecture
 
-Clean layered architecture with centralized API communication:
+Clean layered architecture with centralized API communication. Framework-free logic lives in `lib/`; Vue UI in
+`entrypoints/` + `components/`:
 
-- **API Client**: Central singleton handling all MyJDownloader communication, encryption, and session management
-- **Authentication**: Credential storage and device selection, delegates session logic to API client
-- **Device Management**: Business logic for device operations using centralized API client
-- **Crypto Utilities**: Web Crypto API implementations for MyJDownloader's encryption requirements
-- **UI Components**: Popup for device listing, options for credential management, service worker for background tasks
+- **`lib/api/`**: `crypto.ts` (Web Crypto: secrets, AES-128-CBC, HMAC, server-token chaining), `client.ts` (centralized
+  connect/reconnect/device calls with reactive reconnect+retry-once, backoff, rid validation), `session.ts`, `errors.ts`,
+  `devices.ts`, `linkgrabber.ts`.
+- **`lib/cnl/`**: Click'n'Load decryption + ruleset management. **`lib/basket.ts`**: pending-links store + badge.
+- **`entrypoints/`**: `background.ts` (context menus, CNL webRequest hook), `popup/`, `options/`.
 
-Session management is centralized with automatic error detection and re-authentication based on actual API responses
-rather than timeouts.
+The server encryption token **chains** across reconnects (docs §1.4.1) — this is the critical correctness invariant.
+All API docs live in the `docs` folder and are authoritative.
 
-All API docs live in the `docs` folder.
+## Commands (npm + Node 22)
 
-## Build Commands
-
-- `bun run build`: Production build (always use this, never `bun run dev`)
-- `bun run lint:types`: TypeScript type checking
-- `bun run lint:code`: Biome code linting
-- `bun run web-ext:build`: Build extension package
-- `bun run start:chrome` / `bun run start:firefox`: Launch in browser (user runs manually)
+- `npm run build`: Production build → `.output/chrome-mv3` (use this, never `dev` for verification)
+- `npm run build:firefox`: Firefox MV3 build → `.output/firefox-mv3`
+- `npm run lint:types`: `wxt prepare` + `vue-tsc` type checking
+- `npm run lint:code`: Biome linting (`format` to format)
+- `npm test`: Vitest unit tests
+- `npm run zip`: Package the extension
+- `npm run dev` / `dev:firefox`: Launch in a browser (user runs manually)
 
 ## Internationalization
 
-All user-facing strings must be added to `public/_locales/en/messages.json` and accessed via `chrome.i18n.getMessage()`.
-Never hardcode strings. German translations use informal (Du) form. HTML placeholder keys use double-underscore format (
-`__keyName__`) for programmatic replacement.
+All user-facing strings live in `public/_locales/{en,de}/messages.json` and are accessed via the `t()` helper
+(`lib/i18n.ts`), never hardcoded. Add every new key to **both** locales. German translations use the informal "Du" form.
 
 ## Key Technical Details
 
-**Node Runtime**: Uses Bun as the Node.js runtime, not Node.js itself.
+**Runtime**: npm + Node 22. The unified `browser` API (`wxt/browser`) is used instead of raw `chrome.*` so the
+same code runs on Chrome and Firefox.

@@ -1,0 +1,149 @@
+{
+  "extensionName": {
+    "message": "OurJDownloader"
+  },
+  "extensionDescription": {
+    "message": "Füge Links bequem aus deinem Browser zum JDownloader hinzu."
+  },
+  "contextMenuAddToBasket": {
+    "message": "Link zum Korb hinzufügen"
+  },
+  "contextMenuAddImageToBasket": {
+    "message": "Bild zum Korb hinzufügen"
+  },
+  "contextMenuAddPageToBasket": {
+    "message": "Seite zum Korb hinzufügen"
+  },
+  "linkAddedToBasket": {
+    "message": "Link zum Korb hinzugefügt"
+  },
+  "imageAddedToBasket": {
+    "message": "Bild zum Korb hinzugefügt"
+  },
+  "pageAddedToBasket": {
+    "message": "Seite zum Korb hinzugefügt"
+  },
+  "cnlLinksProcessed": {
+    "message": "$1 Links aus Paket „$2“ hinzugefügt"
+  },
+  "cnlProcessingError": {
+    "message": "Click'n'Load-Anfrage konnte nicht verarbeitet werden"
+  },
+  "unknownPackage": {
+    "message": "Unbekanntes Paket"
+  },
+  "devicesTitle": {
+    "message": "Geräte"
+  },
+  "deviceStatusOnline": {
+    "message": "Online"
+  },
+  "deviceStatusOffline": {
+    "message": "Offline"
+  },
+  "deviceStatusUnknown": {
+    "message": "Prüfe…"
+  },
+  "sendToDevice": {
+    "message": "Senden"
+  },
+  "linkBasketTitle": {
+    "message": "Links"
+  },
+  "clearBasket": {
+    "message": "Leeren"
+  },
+  "linkCopied": {
+    "message": "Kopiert!"
+  },
+  "sendingToDevice": {
+    "message": "Sende…"
+  },
+  "linksSentSuccess": {
+    "message": "Links an JDownloader gesendet"
+  },
+  "linksSentError": {
+    "message": "Links konnten nicht gesendet werden"
+  },
+  "refreshButton": {
+    "message": "Aktualisieren"
+  },
+  "settingsButton": {
+    "message": "Einstellungen"
+  },
+  "noDevicesTitle": {
+    "message": "Keine Geräte gefunden"
+  },
+  "noDevicesMessage": {
+    "message": "Stelle sicher, dass JDownloader läuft und mit deinem MyJDownloader-Konto verbunden ist."
+  },
+  "noCredentialsTitle": {
+    "message": "Einrichtung erforderlich"
+  },
+  "noCredentialsMessage": {
+    "message": "Hinterlege deine MyJDownloader-Zugangsdaten in den Einstellungen, um loszulegen."
+  },
+  "errorTitle": {
+    "message": "Verbindungsfehler"
+  },
+  "errorMessage": {
+    "message": "MyJDownloader ist nicht erreichbar. Prüfe deine Verbindung und Zugangsdaten und versuche es erneut."
+  },
+  "optionsTitle": {
+    "message": "OurJDownloader-Einstellungen"
+  },
+  "credentialsSection": {
+    "message": "MyJDownloader-Konto"
+  },
+  "credentialsHint": {
+    "message": "Deine Zugangsdaten werden lokal gespeichert und nur an MyJDownloader gesendet."
+  },
+  "emailLabel": {
+    "message": "E-Mail"
+  },
+  "passwordLabel": {
+    "message": "Passwort"
+  },
+  "saveButton": {
+    "message": "Anmelden"
+  },
+  "clearButton": {
+    "message": "Daten löschen"
+  },
+  "credentialsSaved": {
+    "message": "Erfolgreich angemeldet!"
+  },
+  "authFailed": {
+    "message": "Falsche E-Mail oder falsches Passwort."
+  },
+  "connectionTestFailed": {
+    "message": "Verbindung fehlgeschlagen. Bitte versuche es erneut."
+  },
+  "errorFillBoth": {
+    "message": "Bitte gib E-Mail und Passwort ein."
+  },
+  "errorInvalidEmail": {
+    "message": "Bitte gib eine gültige E-Mail-Adresse ein."
+  },
+  "clearConfirm": {
+    "message": "Alle gespeicherten Daten löschen? Das kann nicht rückgängig gemacht werden."
+  },
+  "dataCleared": {
+    "message": "Alle Daten gelöscht."
+  },
+  "generalSection": {
+    "message": "Allgemein"
+  },
+  "basketNotificationsLabel": {
+    "message": "Korb-Benachrichtigungen"
+  },
+  "basketNotificationsDescription": {
+    "message": "Zeige eine Benachrichtigung, wenn Links zum Korb hinzugefügt werden."
+  },
+  "cnlEnabledLabel": {
+    "message": "Click'n'Load aktivieren"
+  },
+  "cnlEnabledDescription": {
+    "message": "Fange Click'n'Load-Links von Webseiten ab und entschlüssle sie in den Korb."
+  }
+}

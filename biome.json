@@ -1,8 +1,15 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "files": {
-    "includes": ["source/**/*.ts", "source/**/*.js", "**/*.json"],
-    "ignoreUnknown": false
+    "includes": [
+      "lib/**/*.ts",
+      "entrypoints/**/*.ts",
+      "components/**/*.ts",
+      "tests/**/*.ts",
+      "*.ts",
+      "**/*.json"
+    ],
+    "ignoreUnknown": true
   },
   "formatter": {
     "indentStyle": "space"

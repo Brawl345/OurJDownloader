@@ -5,110 +5,14 @@
   "extensionDescription": {
     "message": "Easily add links to JDownloader from your browser."
   },
-  "contextMenuTitle": {
-    "message": "OurJDownloader"
-  },
-  "statusLoading": {
-    "message": "Loading..."
-  },
-  "statusSigningIn": {
-    "message": "Signing in..."
-  },
-  "statusLoadingDevices": {
-    "message": "Loading devices..."
-  },
-  "statusConnected": {
-    "message": "Connected ($1 devices)"
-  },
-  "statusConnectedSingle": {
-    "message": "Connected ($1 device)"
-  },
-  "statusNoCredentials": {
-    "message": "No credentials found"
-  },
-  "statusNoDevices": {
-    "message": "No devices found"
-  },
-  "statusError": {
-    "message": "Connection error"
-  },
-  "devicesTitle": {
-    "message": "JDownloader Devices"
-  },
-  "noDevicesTitle": {
-    "message": "No Devices Found"
-  },
-  "noDevicesMessage": {
-    "message": "Make sure JDownloader is running and connected to your account."
-  },
-  "noCredentialsTitle": {
-    "message": "Setup Required"
-  },
-  "noCredentialsMessage": {
-    "message": "Please configure your MyJDownloader credentials in the extension settings."
-  },
-  "errorTitle": {
-    "message": "Connection Error"
-  },
-  "errorMessage": {
-    "message": "Unable to connect to MyJDownloader. Please check your internet connection and try again."
-  },
-  "refreshButton": {
-    "message": "Refresh"
-  },
-  "settingsButton": {
-    "message": "Settings"
-  },
-  "deviceStatusOnline": {
-    "message": "Device is online"
-  },
-  "deviceStatusOffline": {
-    "message": "Device is offline"
-  },
-  "deviceStatusUnknown": {
-    "message": "Device status unknown"
-  },
-  "optionsTitle": {
-    "message": "OurJDownloader Settings"
-  },
-  "credentialsSection": {
-    "message": "MyJDownloader Account"
-  },
-  "emailLabel": {
-    "message": "Email:"
-  },
-  "passwordLabel": {
-    "message": "Password:"
-  },
-  "saveButton": {
-    "message": "Sign In"
-  },
-  "testButton": {
-    "message": "Test Connection"
-  },
-  "clearButton": {
-    "message": "Clear Data"
-  },
-  "credentialsSaved": {
-    "message": "Signed in successfully!"
-  },
-  "connectionTestSuccess": {
-    "message": "Connection test successful!"
-  },
-  "connectionTestFailed": {
-    "message": "Connection test failed. Please check your credentials."
-  },
-  "dataCleared": {
-    "message": "All data cleared successfully!"
-  },
   "contextMenuAddToBasket": {
-    "message": "Add to Basket"
+    "message": "Add link to basket"
   },
   "contextMenuAddImageToBasket": {
-    "message": "Add Image to Basket"
+    "message": "Add image to basket"
   },
   "contextMenuAddPageToBasket": {
-    "message": "Add Page to Basket"
+    "message": "Add page to basket"
   },
   "linkAddedToBasket": {
     "message": "Link added to basket"
@@ -119,70 +23,127 @@
   "pageAddedToBasket": {
     "message": "Page added to basket"
   },
+  "cnlLinksProcessed": {
+    "message": "$1 links added from package “$2”"
+  },
+  "cnlProcessingError": {
+    "message": "Failed to process Click'n'Load request"
+  },
+  "unknownPackage": {
+    "message": "Unknown package"
+  },
+  "devicesTitle": {
+    "message": "Devices"
+  },
+  "deviceStatusOnline": {
+    "message": "Online"
+  },
+  "deviceStatusOffline": {
+    "message": "Offline"
+  },
+  "deviceStatusUnknown": {
+    "message": "Checking…"
+  },
+  "sendToDevice": {
+    "message": "Send"
+  },
   "linkBasketTitle": {
     "message": "Links"
   },
-  "linkBasketCount": {
-    "message": "$1 link(s) in basket"
-  },
-  "sendToDevice": {
-    "message": "Send to Device"
-  },
   "clearBasket": {
-    "message": "Clear Basket"
+    "message": "Clear"
+  },
+  "linkCopied": {
+    "message": "Copied!"
+  },
+  "sendingToDevice": {
+    "message": "Sending…"
   },
   "linksSentSuccess": {
-    "message": "Links sent to JDownloader successfully!"
+    "message": "Links sent to JDownloader"
   },
   "linksSentError": {
-    "message": "Failed to send links to JDownloader"
+    "message": "Failed to send links"
   },
-  "basketCleared": {
-    "message": "Basket cleared"
+  "refreshButton": {
+    "message": "Refresh"
+  },
+  "settingsButton": {
+    "message": "Settings"
+  },
+  "noDevicesTitle": {
+    "message": "No devices found"
+  },
+  "noDevicesMessage": {
+    "message": "Make sure JDownloader is running and connected to your MyJDownloader account."
+  },
+  "noCredentialsTitle": {
+    "message": "Setup required"
+  },
+  "noCredentialsMessage": {
+    "message": "Add your MyJDownloader credentials in the settings to get started."
+  },
+  "errorTitle": {
+    "message": "Connection error"
+  },
+  "errorMessage": {
+    "message": "Could not reach MyJDownloader. Check your connection and credentials, then try again."
+  },
+  "optionsTitle": {
+    "message": "OurJDownloader Settings"
+  },
+  "credentialsSection": {
+    "message": "MyJDownloader account"
+  },
+  "credentialsHint": {
+    "message": "Your credentials are stored locally and only sent to MyJDownloader."
+  },
+  "emailLabel": {
+    "message": "Email"
+  },
+  "passwordLabel": {
+    "message": "Password"
+  },
+  "saveButton": {
+    "message": "Sign in"
+  },
+  "clearButton": {
+    "message": "Clear data"
+  },
+  "credentialsSaved": {
+    "message": "Signed in successfully!"
+  },
+  "authFailed": {
+    "message": "Wrong email or password."
+  },
+  "connectionTestFailed": {
+    "message": "Connection failed. Please try again."
+  },
+  "errorFillBoth": {
+    "message": "Please enter both email and password."
+  },
+  "errorInvalidEmail": {
+    "message": "Please enter a valid email address."
+  },
+  "clearConfirm": {
+    "message": "Clear all stored data? This cannot be undone."
+  },
+  "dataCleared": {
+    "message": "All data cleared."
   },
   "generalSection": {
-    "message": "General Settings"
+    "message": "General"
   },
   "basketNotificationsLabel": {
-    "message": "Enable basket notifications"
+    "message": "Basket notifications"
   },
   "basketNotificationsDescription": {
-    "message": "Show notifications when links are added to the basket"
-  },
-  "generalSettingsSaved": {
-    "message": "Settings saved!"
-  },
-  "generalSettingsError": {
-    "message": "Failed to save settings"
+    "message": "Show a notification when links are added to the basket."
   },
   "cnlEnabledLabel": {
     "message": "Enable Click'n'Load"
   },
   "cnlEnabledDescription": {
-    "message": "Automatically intercept and decrypt Click'n'Load links from websites"
-  },
-  "cnlSettingsSaved": {
-    "message": "Click'n'Load settings saved!"
-  },
-  "cnlSettingsError": {
-    "message": "Failed to save Click'n'Load settings"
-  },
-  "cnlLinksProcessed": {
-    "message": "$1 links added from package '$2'"
-  },
-  "cnlProcessingError": {
-    "message": "Failed to process Click'n'Load request"
-  },
-  "passwordProtected": {
-    "message": "Password protected"
-  },
-  "manualLinks": {
-    "message": "Manual Links"
-  },
-  "linkCopied": {
-    "message": "Copied!"
-  },
-  "sendingLinksToDevice": {
-    "message": "Sending links to device..."
+    "message": "Intercept and decrypt Click'n'Load links from websites into the basket."
   }
 }
