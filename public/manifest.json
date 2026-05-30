@@ -1,0 +1,69 @@
+{
+  "manifest_version": 3,
+  "default_locale": "en",
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "author": "Andreas Bielawski",
+  "version": "1.0.0",
+  "update_url": "https://raw.githubusercontent.com/Brawl345/ourjdownloader/master/updates.xml",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "64": "icons/64.png",
+    "128": "icons/128.png",
+    "256": "icons/256.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png",
+      "48": "icons/48.png",
+      "64": "icons/64.png",
+      "128": "icons/128.png",
+      "256": "icons/256.png"
+    },
+    "default_title": "__MSG_contextMenuTitle__",
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "scripts": ["build/service-worker/service-worker.js"],
+    "service_worker": "build/service-worker/service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "storage",
+    "declarativeNetRequest",
+    "webRequest"
+  ],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "cnl_rules",
+        "enabled": false,
+        "path": "cnl-rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["/web_accessible_resources/jdcheck.js"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  "options_ui": {
+    "open_in_tab": false,
+    "page": "options/options.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ourjdownloader@brawl345.github.com",
+      "strict_min_version": "140.0",
+      "update_url": "https://raw.githubusercontent.com/Brawl345/ourjdownloader/master/updates.json"
+    }
+  }
+}

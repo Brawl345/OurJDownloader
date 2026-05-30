@@ -1,0 +1,46 @@
+{
+  "name": "ourjdownloader",
+  "description": "OurJDownloader",
+  "version": "1.0.0",
+  "author": "Brawl345",
+  "license": "Unlicense",
+  "repository": {
+    "url": "https://github.com/Brawl345/ourjdownloader"
+  },
+  "main": "source/service-worker/service-worker.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun build.ts",
+    "build": "cross-env NODE_ENV=\"production\" tsx build.ts",
+    "start:chrome": "web-ext run --no-reload -t chromium",
+    "start:firefox": "web-ext run --no-reload -t firefox-desktop",
+    "lint:types": "tsc --project tsconfig.json",
+    "format": "biome format --fix",
+    "lint:code": "biome lint",
+    "lint:code-fix": "biome lint --fix",
+    "lint:web-ext": "bun run build && web-ext lint --self-hosted",
+    "release": "bun scripts/release.ts",
+    "web-ext:build": "bun run build && web-ext build --overwrite-dest"
+  },
+  "webExt": {
+    "sourceDir": "./public/",
+    "run": {
+      "startUrl": [
+        "about:debugging#/runtime/this-firefox"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.0",
+    "@types/chrome": "0.1.4",
+    "cross-env": "10.0.0",
+    "esbuild": "0.25.9",
+    "globals": "16.3.0",
+    "tsx": "4.20.4",
+    "typescript": "5.9.2",
+    "web-ext": "8.9.0"
+  },
+  "dependencies": {
+    "crypto-es": "^2.1.0"
+  }
+}

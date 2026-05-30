@@ -1,0 +1,188 @@
+{
+  "extensionName": {
+    "message": "OurJDownloader"
+  },
+  "extensionDescription": {
+    "message": "Easily add links to JDownloader from your browser."
+  },
+  "contextMenuTitle": {
+    "message": "OurJDownloader"
+  },
+  "statusLoading": {
+    "message": "Loading..."
+  },
+  "statusSigningIn": {
+    "message": "Signing in..."
+  },
+  "statusLoadingDevices": {
+    "message": "Loading devices..."
+  },
+  "statusConnected": {
+    "message": "Connected ($1 devices)"
+  },
+  "statusConnectedSingle": {
+    "message": "Connected ($1 device)"
+  },
+  "statusNoCredentials": {
+    "message": "No credentials found"
+  },
+  "statusNoDevices": {
+    "message": "No devices found"
+  },
+  "statusError": {
+    "message": "Connection error"
+  },
+  "devicesTitle": {
+    "message": "JDownloader Devices"
+  },
+  "noDevicesTitle": {
+    "message": "No Devices Found"
+  },
+  "noDevicesMessage": {
+    "message": "Make sure JDownloader is running and connected to your account."
+  },
+  "noCredentialsTitle": {
+    "message": "Setup Required"
+  },
+  "noCredentialsMessage": {
+    "message": "Please configure your MyJDownloader credentials in the extension settings."
+  },
+  "errorTitle": {
+    "message": "Connection Error"
+  },
+  "errorMessage": {
+    "message": "Unable to connect to MyJDownloader. Please check your internet connection and try again."
+  },
+  "refreshButton": {
+    "message": "Refresh"
+  },
+  "settingsButton": {
+    "message": "Settings"
+  },
+  "deviceStatusOnline": {
+    "message": "Device is online"
+  },
+  "deviceStatusOffline": {
+    "message": "Device is offline"
+  },
+  "deviceStatusUnknown": {
+    "message": "Device status unknown"
+  },
+  "optionsTitle": {
+    "message": "OurJDownloader Settings"
+  },
+  "credentialsSection": {
+    "message": "MyJDownloader Account"
+  },
+  "emailLabel": {
+    "message": "Email:"
+  },
+  "passwordLabel": {
+    "message": "Password:"
+  },
+  "saveButton": {
+    "message": "Sign In"
+  },
+  "testButton": {
+    "message": "Test Connection"
+  },
+  "clearButton": {
+    "message": "Clear Data"
+  },
+  "credentialsSaved": {
+    "message": "Signed in successfully!"
+  },
+  "connectionTestSuccess": {
+    "message": "Connection test successful!"
+  },
+  "connectionTestFailed": {
+    "message": "Connection test failed. Please check your credentials."
+  },
+  "dataCleared": {
+    "message": "All data cleared successfully!"
+  },
+  "contextMenuAddToBasket": {
+    "message": "Add to Basket"
+  },
+  "contextMenuAddImageToBasket": {
+    "message": "Add Image to Basket"
+  },
+  "contextMenuAddPageToBasket": {
+    "message": "Add Page to Basket"
+  },
+  "linkAddedToBasket": {
+    "message": "Link added to basket"
+  },
+  "imageAddedToBasket": {
+    "message": "Image added to basket"
+  },
+  "pageAddedToBasket": {
+    "message": "Page added to basket"
+  },
+  "linkBasketTitle": {
+    "message": "Links"
+  },
+  "linkBasketCount": {
+    "message": "$1 link(s) in basket"
+  },
+  "sendToDevice": {
+    "message": "Send to Device"
+  },
+  "clearBasket": {
+    "message": "Clear Basket"
+  },
+  "linksSentSuccess": {
+    "message": "Links sent to JDownloader successfully!"
+  },
+  "linksSentError": {
+    "message": "Failed to send links to JDownloader"
+  },
+  "basketCleared": {
+    "message": "Basket cleared"
+  },
+  "generalSection": {
+    "message": "General Settings"
+  },
+  "basketNotificationsLabel": {
+    "message": "Enable basket notifications"
+  },
+  "basketNotificationsDescription": {
+    "message": "Show notifications when links are added to the basket"
+  },
+  "generalSettingsSaved": {
+    "message": "Settings saved!"
+  },
+  "generalSettingsError": {
+    "message": "Failed to save settings"
+  },
+  "cnlEnabledLabel": {
+    "message": "Enable Click'n'Load"
+  },
+  "cnlEnabledDescription": {
+    "message": "Automatically intercept and decrypt Click'n'Load links from websites"
+  },
+  "cnlSettingsSaved": {
+    "message": "Click'n'Load settings saved!"
+  },
+  "cnlSettingsError": {
+    "message": "Failed to save Click'n'Load settings"
+  },
+  "cnlLinksProcessed": {
+    "message": "$1 links added from package '$2'"
+  },
+  "cnlProcessingError": {
+    "message": "Failed to process Click'n'Load request"
+  },
+  "passwordProtected": {
+    "message": "Password protected"
+  },
+  "manualLinks": {
+    "message": "Manual Links"
+  },
+  "linkCopied": {
+    "message": "Copied!"
+  },
+  "sendingLinksToDevice": {
+    "message": "Sending links to device..."
+  }
+}
