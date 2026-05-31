@@ -1,0 +1,13 @@
+{
+  "addons": {
+    "ourjdownloader@brawl345.github.com": {
+      "updates": [
+        {
+          "version": "2.0.0",
+          "update_link": "https://github.com/Brawl345/ourjdownloader/releases/download/2.0.0/ourjdownloader-2.0.0.xpi",
+          "update_info_url": "https://raw.githubusercontent.com/Brawl345/ourjdownloader/refs/tags/2.0.0/CHANGES.md"
+        }
+      ]
+    }
+  }
+}
