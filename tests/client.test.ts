@@ -66,6 +66,55 @@ describe('serverCall reconnect + retry-once (docs §2.5)', () => {
   });
 });
 
+// A real, serializing Web Locks stand-in so we can assert the cross-context
+// single-flight reconnect (jsdom has no navigator.locks).
+function installSerialLock(): void {
+  let chain: Promise<unknown> = Promise.resolve();
+  vi.stubGlobal('navigator', {
+    locks: {
+      request: (_name: string, cb: () => Promise<unknown>) => {
+        const run = chain.then(() => cb());
+        chain = run.catch(() => undefined);
+        return run;
+      },
+    },
+  });
+}
+
+describe('concurrent reconnect is coalesced (single-flight)', () => {
+  it('fires /my/reconnect once for two parallel token-invalid calls', async () => {
+    installSerialLock();
+    const oldToken = SESSION.sessiontoken;
+    const newSession = 'a1'.repeat(32);
+    const chained = await chainServerToken(SESSION.serverToken, newSession);
+
+    const reconnectBody = await encryptWith(SESSION.serverToken, {
+      sessiontoken: newSession,
+      regaintoken: 'a2'.repeat(32),
+    });
+    const listBody = await encryptWith(chained, { list: [] });
+
+    let reconnectCalls = 0;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes('/my/reconnect')) {
+        reconnectCalls += 1;
+        return response(200, reconnectBody);
+      }
+      if (url.includes(`sessiontoken=${oldToken}`)) return response(403);
+      return response(200, listBody);
+    });
+
+    const [a, b] = await Promise.all([
+      serverCall<{ list: unknown[] }>('/my/listdevices'),
+      serverCall<{ list: unknown[] }>('/my/listdevices'),
+    ]);
+
+    expect(a.list).toEqual([]);
+    expect(b.list).toEqual([]);
+    expect(reconnectCalls).toBe(1);
+  });
+});
+
 describe('serverCall backoff (docs §6.4)', () => {
   it('retries after an OVERLOAD/429 without reconnecting', async () => {
     const listBody = await encryptWith(SESSION.serverToken, { list: [] });

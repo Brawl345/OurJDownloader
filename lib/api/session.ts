@@ -4,7 +4,6 @@ import type { Credentials, SessionState } from './types';
 const STORAGE_KEYS = {
   credentials: 'myjd_credentials',
   session: 'myjd_session',
-  lastCall: 'myjd_last_call',
 } as const;
 
 export async function getCredentials(): Promise<Credentials | null> {
@@ -24,32 +23,16 @@ export async function getSession(): Promise<SessionState | null> {
 }
 
 export async function setSession(session: SessionState): Promise<void> {
-  await browser.storage.local.set({
-    [STORAGE_KEYS.session]: session,
-    [STORAGE_KEYS.lastCall]: Date.now(),
-  });
+  await browser.storage.local.set({ [STORAGE_KEYS.session]: session });
 }
 
 export async function clearSession(): Promise<void> {
-  await browser.storage.local.remove([
-    STORAGE_KEYS.session,
-    STORAGE_KEYS.lastCall,
-  ]);
+  await browser.storage.local.remove(STORAGE_KEYS.session);
 }
 
 export async function clearAll(): Promise<void> {
   await browser.storage.local.remove([
     STORAGE_KEYS.credentials,
     STORAGE_KEYS.session,
-    STORAGE_KEYS.lastCall,
   ]);
-}
-
-export async function getLastCall(): Promise<number | null> {
-  const result = await browser.storage.local.get(STORAGE_KEYS.lastCall);
-  return (result[STORAGE_KEYS.lastCall] as number) ?? null;
-}
-
-export async function touchLastCall(): Promise<void> {
-  await browser.storage.local.set({ [STORAGE_KEYS.lastCall]: Date.now() });
 }

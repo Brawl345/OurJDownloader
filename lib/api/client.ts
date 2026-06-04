@@ -21,17 +21,17 @@ import {
 import {
   clearSession,
   getCredentials,
-  getLastCall,
   getSession,
   setSession,
-  touchLastCall,
 } from './session';
 import type { DeviceResponse, HandshakeResponse, SessionState } from './types';
 
 const API_ROOT = 'https://api.jdownloader.org';
 const APPKEY = 'https://nyanya.de';
-const SESSION_TIMEOUT_MS = 30_000; // docs §2.5 proactive reconnect window
 const MAX_BACKOFF_ATTEMPTS = 3;
+const RECONNECT_LOCK = 'myjd-reconnect';
+
+type LockRequest = <R>(name: string, callback: () => Promise<R>) => Promise<R>;
 
 function enc(value: string): string {
   return encodeURIComponent(value);
@@ -102,14 +102,20 @@ function validateRid(parsed: unknown, expected: number): void {
   }
 }
 
-async function isStale(): Promise<boolean> {
-  const lastCall = await getLastCall();
-  if (lastCall === null) return true;
-  return Date.now() - lastCall > SESSION_TIMEOUT_MS;
+// Serialize reconnects across every extension context (popup + background) so
+// the single-use regaintoken is consumed exactly once per rotation — mirrors the
+// official addon's RECONNECT_STATE queue + ReconnectLock. Falls back to a direct
+// call where the Web Locks API is unavailable (e.g. unit tests).
+function withReconnectLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = (
+    globalThis.navigator as { locks?: { request: LockRequest } } | undefined
+  )?.locks;
+  if (!locks) return fn();
+  return locks.request(RECONNECT_LOCK, fn);
 }
 
 // /my/reconnect — rotate and CHAIN the server token (docs §1.4.1, §2.3).
-async function tryReconnect(
+async function performReconnect(
   session: SessionState,
 ): Promise<SessionState | null> {
   const rid = newRid();
@@ -147,30 +153,36 @@ async function tryReconnect(
   }
 }
 
-// Run an API call with proactive reconnect, reactive reconnect+retry-once on
-// token errors, and exponential backoff on overload (docs §2.5, §6.4).
+// Coalesced reconnect: hold the cross-context lock, then re-check storage — if
+// another call already rotated the session we reuse it instead of spending the
+// single-use regaintoken a second time.
+function reconnect(stale: SessionState): Promise<SessionState | null> {
+  return withReconnectLock(async () => {
+    const current = await getSession();
+    if (!current) return null;
+    if (current.sessiontoken !== stale.sessiontoken) return current;
+    return performReconnect(current);
+  });
+}
+
+// Run an API call with reactive reconnect+retry-once on token errors and
+// exponential backoff on overload (docs §6.1, §6.4).
 async function withSession<T>(
   doCall: (session: SessionState) => Promise<T>,
 ): Promise<T> {
   let session = await getSession();
   if (!session) throw new SessionError('Not signed in');
 
-  if (await isStale()) {
-    session = (await tryReconnect(session)) ?? session;
-  }
-
   let reconnected = false;
   let backoffAttempts = 0;
 
   while (true) {
     try {
-      const result = await doCall(session);
-      await touchLastCall();
-      return result;
+      return await doCall(session);
     } catch (error) {
       if (isTokenError(error) && !reconnected) {
         reconnected = true;
-        const next = await tryReconnect(session);
+        const next = await reconnect(session);
         if (!next) {
           await clearSession();
           throw new SessionError('Session reconnect failed');

@@ -1,3 +1,7 @@
+## v2.0.1
+
+* Fix session disconnects
+
 ## v2.0.0
 
 * Rewrite with Vue

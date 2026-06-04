@@ -115,34 +115,40 @@ GET https://api.jdownloader.org/my/disconnect?sessiontoken=<cur>&rid=<rid>&signa
 
 ## 2.5 Session lifecycle & when to reconnect
 
-A session goes stale quickly. Two complementary strategies — implement at least the second:
+A session goes stale quickly. Recover **reactively** — detect failure *from the actual response*:
 
-1. **Proactive timeout.** Track the timestamp of your last successful call. If more than **~30
-   seconds** have elapsed, reconnect before the next call. (30 s is the value used by the reference
-   clients.)
+- HTTP **403**, or
+- a decrypted error body with `type == "TOKEN_INVALID"` (or `"SESSION"` / `"SESSION_EXPIRED"`),
 
-2. **Reactive (recommended, more robust).** Detect failure *from the actual response* and recover:
-   - HTTP **403**, or
-   - a decrypted error body with `type == "TOKEN_INVALID"` (or `"SESSION"` / `"SESSION_EXPIRED"`),
+then call `/my/reconnect` and **retry the original request once**. If the retry still fails, clear
+the session and require a fresh `/my/connect`.
 
-   then call `/my/reconnect` and **retry the original request once**. If the retry still fails,
-   clear the session and require a fresh `/my/connect`.
+Reactive handling is correct because the real expiry is server-controlled. A proactive "reconnect
+after ~30 s idle" timer is **not** used: it manufactures extra reconnects (each one a rotation that
+can race — see below) without preventing the occasional server-side expiry you must handle anyway.
 
-Reactive handling is preferable because the real expiry is server-controlled and not strictly 30 s;
-relying on the timeout alone causes spurious failures, and reconnecting on every call is wasteful.
+### Reconnect must be single-flight (critical)
+
+`/my/reconnect` **rotates both `sessiontoken` and `regaintoken`, and the old `regaintoken` is
+single-use.** If two requests reconnect concurrently with the same `regaintoken`, the server honours
+one and rejects the rest; the losers then hold a stale session whose `regaintoken` is already spent,
+so every further reconnect fails and only a full `/my/connect` recovers. This bites whenever a UI
+fires calls in parallel or popup and background act at once.
+
+Serialize reconnects across **all** contexts (the official addon uses a global reconnect state +
+queue and a cross-tab lock). A robust shape: take a lock (e.g. the Web Locks API, which is shared
+across an extension's popup and service worker), then re-read the stored session — if another caller
+already rotated it, reuse that fresh session instead of spending the `regaintoken` again.
 
 ### Recommended call wrapper (pseudocode)
 
 ```
 function apiCall(...):
-    if now - lastCall > 30s:
-        reconnect()            # proactive
     try:
         resp = doRequest(...)
         if httpStatus == 403 or resp.error.type in {TOKEN_INVALID, SESSION, SESSION_EXPIRED}:
-            reconnect()
-            resp = doRequest(...)   # retry once
-        lastCall = now
+            reconnect()            # single-flight: lock + re-read session, see above
+            resp = doRequest(...)   # retry once with the rotated tokens
         return resp
     on reconnect-failure:
         clearSession(); raise NeedLogin
@@ -154,8 +160,7 @@ Persist only what you cannot recompute cheaply:
 
 - `loginSecret`, `deviceSecret` (or the credentials to derive them),
 - current `sessiontoken`, `regaintoken`,
-- current `serverEncryptionToken` (needed because it **chains** across reconnects),
-- last-call timestamp.
+- current `serverEncryptionToken` (needed because it **chains** across reconnects).
 
 The `deviceEncryptionToken` can always be recomputed from `deviceSecret + sessiontoken`, so it need
 not be stored. **Never log or persist the plaintext password unnecessarily.**

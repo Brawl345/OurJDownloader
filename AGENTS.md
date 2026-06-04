@@ -13,7 +13,8 @@ Clean layered architecture with centralized API communication. Framework-free lo
 `entrypoints/` + `components/`:
 
 - **`lib/api/`**: `crypto.ts` (Web Crypto: secrets, AES-128-CBC, HMAC, server-token chaining), `client.ts` (centralized
-  connect/reconnect/device calls with reactive reconnect+retry-once, backoff, rid validation), `session.ts`, `errors.ts`,
+  connect/reconnect/device calls with reactive single-flight reconnect+retry-once via Web Locks shared across
+  popup+background, backoff, rid validation), `session.ts`, `errors.ts`,
   `devices.ts`, `linkgrabber.ts`.
 - **`lib/cnl/`**: Click'n'Load decryption + ruleset management. **`lib/basket.ts`**: pending-links store + badge.
 - **`entrypoints/`**: `background.ts` (context menus, CNL webRequest hook), `popup/`, `options/`.
