@@ -18,7 +18,10 @@ const email = ref('');
 const password = ref('');
 const saving = ref(false);
 const clearing = ref(false);
+const confirmingClear = ref(false);
 const message = ref<{ text: string; kind: 'success' | 'error' } | null>(null);
+
+let clearConfirmTimer: ReturnType<typeof setTimeout> | undefined;
 
 const options = ref<GeneralOptions>({
   basketNotificationsEnabled: true,
@@ -68,8 +71,23 @@ async function save(): Promise<void> {
   }
 }
 
+// Two-click inline confirm — native confirm() is suppressed in embedded
+// options pages (options_ui.open_in_tab=false), so the dialog never shows.
+function requestClear(): void {
+  if (!confirmingClear.value) {
+    confirmingClear.value = true;
+    clearTimeout(clearConfirmTimer);
+    clearConfirmTimer = setTimeout(() => {
+      confirmingClear.value = false;
+    }, 4000);
+    return;
+  }
+  clearTimeout(clearConfirmTimer);
+  confirmingClear.value = false;
+  void clearData();
+}
+
 async function clearData(): Promise<void> {
-  if (!confirm(t('clearConfirm'))) return;
   clearing.value = true;
   try {
     await clearAll();
@@ -133,8 +151,13 @@ onMounted(async () => {
         />
 
         <div class="buttons">
-          <button class="danger" :disabled="clearing" @click="clearData">
-            {{ t('clearButton') }}
+          <button
+            class="danger"
+            :class="{ confirming: confirmingClear }"
+            :disabled="clearing"
+            @click="requestClear"
+          >
+            {{ confirmingClear ? t('clearConfirmButton') : t('clearButton') }}
           </button>
           <button class="primary" :disabled="saving" @click="save">
             <span v-if="saving" class="spinner"></span>
@@ -293,6 +316,18 @@ input[type='password']:focus {
 
 .buttons .danger:hover:not(:disabled) {
   background: var(--danger-soft);
+}
+
+.buttons .danger.confirming {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+/* Darken on hover (not the light --danger-soft) so the white label stays legible. */
+.buttons .danger.confirming:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 85%, #000);
+  border-color: color-mix(in srgb, var(--danger) 85%, #000);
 }
 
 .message {

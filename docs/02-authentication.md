@@ -81,9 +81,14 @@ Use when the session went stale (timeout, `TOKEN_INVALID`, or HTTP 403). Obtains
 `sessiontoken`/`regaintoken` without credentials.
 
 ```
-GET https://api.jdownloader.org/my/reconnect?sessiontoken=<cur>&regaintoken=<cur>&rid=<rid>&signature=<sig>
+GET https://api.jdownloader.org/my/reconnect?appkey=<appkey>&sessiontoken=<cur>&regaintoken=<cur>&rid=<rid>&signature=<sig>
 ```
 
+- **`appkey` is required** and must be the same one used for `/my/connect`. Both official clients
+  (the JDownloader Java `MyJDownloaderClient` and the browser addon) send it; the server scopes the
+  regain token to the appkey, so omitting it makes every reconnect fail and only a full `/my/connect`
+  recovers. (The param name is case-insensitive: the Java client sends `regaintoken`, the browser
+  addon `regainToken`.)
 - **Signed with the current `serverEncryptionToken`** (the one in effect *before* reconnecting).
 - Decrypt the response with that **same current `serverEncryptionToken`**.
 

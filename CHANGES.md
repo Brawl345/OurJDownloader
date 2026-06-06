@@ -1,3 +1,8 @@
+## v2.0.2
+
+* Fix session disconnects again
+* Fix delete button functionality
+
 ## v2.0.1
 
 * Fix session disconnects

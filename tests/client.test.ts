@@ -64,6 +64,27 @@ describe('serverCall reconnect + retry-once (docs §2.5)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls[1]?.[0]).toContain('/my/reconnect');
   });
+
+  it('sends the reconnect params both official clients use (appkey + sessiontoken + regaintoken)', async () => {
+    const reconnectBody = await encryptWith(SESSION.serverToken, {
+      sessiontoken: 'a1'.repeat(32),
+      regaintoken: 'a2'.repeat(32),
+    });
+    const chained = await chainServerToken(SESSION.serverToken, 'a1'.repeat(32));
+    const listBody = await encryptWith(chained, { list: [] });
+    fetchMock
+      .mockResolvedValueOnce(response(403))
+      .mockResolvedValueOnce(response(200, reconnectBody))
+      .mockResolvedValueOnce(response(200, listBody));
+
+    await serverCall('/my/listdevices');
+
+    const reconnectUrl = String(fetchMock.mock.calls[1]?.[0]);
+    // appkey is required — the server scopes the regain token to it.
+    expect(reconnectUrl).toContain('appkey=');
+    expect(reconnectUrl).toContain(`sessiontoken=${SESSION.sessiontoken}`);
+    expect(reconnectUrl).toContain(`regaintoken=${SESSION.regaintoken}`);
+  });
 });
 
 // A real, serializing Web Locks stand-in so we can assert the cross-context

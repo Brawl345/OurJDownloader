@@ -125,8 +125,8 @@
   "errorInvalidEmail": {
     "message": "Please enter a valid email address."
   },
-  "clearConfirm": {
-    "message": "Clear all stored data? This cannot be undone."
+  "clearConfirmButton": {
+    "message": "Confirm delete?"
   },
   "dataCleared": {
     "message": "All data cleared."

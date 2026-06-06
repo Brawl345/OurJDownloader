@@ -55,7 +55,7 @@ result = json(aes_decrypt(deviceEncToken, resp))      # { data: {...}, rid }
 
 # --- reconnect (on 403/TOKEN_INVALID; single-flight, see §2.5) ---
 rid   = now_ms()
-query = "sessiontoken=" + sessiontoken + "&regaintoken=" + regaintoken + "&rid=" + rid
+query = "appkey=" + appkey + "&sessiontoken=" + sessiontoken + "&regaintoken=" + regaintoken + "&rid=" + rid
 sig   = hmac_sha256_hex(serverEncToken, "/my/reconnect?" + query)     # CURRENT server token
 resp  = http_get(".../my/reconnect?" + query + "&signature=" + sig)
 { sessiontoken, regaintoken } = json(aes_decrypt(serverEncToken, resp))   # decrypt w/ CURRENT token

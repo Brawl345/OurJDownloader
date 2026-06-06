@@ -115,11 +115,15 @@ function withReconnectLock<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 // /my/reconnect — rotate and CHAIN the server token (docs §1.4.1, §2.3).
+// `appkey` is REQUIRED here: both official clients (the JDownloader Java
+// MyJDownloaderClient and the browser addon) send it, and the server scopes the
+// regain token to the appkey — without it every reconnect fails and only a full
+// /my/connect recovers. Param order/casing follow the Java client.
 async function performReconnect(
   session: SessionState,
 ): Promise<SessionState | null> {
   const rid = newRid();
-  const query = `sessiontoken=${session.sessiontoken}&regaintoken=${session.regaintoken}&rid=${rid}`;
+  const query = `appkey=${enc(APPKEY)}&sessiontoken=${session.sessiontoken}&regaintoken=${session.regaintoken}&rid=${rid}`;
   const signature = await hmacSha256Hex(
     `/my/reconnect?${query}`,
     session.serverToken,

@@ -42,8 +42,9 @@ Read in order if you are implementing from scratch:
 4. **GET requests are signed**, POST device requests are encrypted. The server echoes a request id
    (`rid`) you send, which you must validate to defeat replay attacks.
 
-5. **Sessions are short-lived.** After ~30 s of inactivity (or any `TOKEN_INVALID`/HTTP 403), call
-   `/my/reconnect` with your `regaintoken` to get a fresh `sessiontoken`.
+5. **Sessions are short-lived.** On any `TOKEN_INVALID`/HTTP 403, call `/my/reconnect` (with your
+   `regaintoken` **and** the `appkey`) to get a fresh `sessiontoken`. Reconnect must be single-flight
+   — the `regaintoken` is single-use (see §2.3/§2.5).
 
 ## API root
 

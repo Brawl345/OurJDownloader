@@ -163,6 +163,13 @@ export function deviceToken(
   return sha256OfHexConcat(deviceSecretHex, sessionTokenHex);
 }
 
+// Monotonic request id, like the official addon's getRID: parallel calls within
+// the same millisecond must not collide, since the server treats a non-increasing
+// rid as a replay.
+let lastRid = 0;
 export function newRid(): number {
-  return Date.now();
+  let rid = Date.now();
+  if (rid <= lastRid) rid = lastRid + 1;
+  lastRid = rid;
+  return rid;
 }
