@@ -10,7 +10,8 @@ This file ties everything together. If you implement the steps here, you have a 
 3. compute serverEncryptionToken, deviceEncryptionToken   (§1.4)
 4. /my/listdevices → pick a deviceId           (§3.2)
 5. device calls (addLinks, queryLinks, start…) (§4, §5)
-   ↳ on 403/TOKEN_INVALID → /my/reconnect (single-flight), rotate tokens, retry  (§2.3, §2.5)
+   ↳ on 403/TOKEN_INVALID → /my/reconnect (single-flight), retry; if still failing → full
+     /my/connect re-login, retry  (§2.3, §2.5)
 6. /my/disconnect when done                    (§2.4)
 ```
 
@@ -156,6 +157,8 @@ aes_dec "$resp" "$device_token" | jq .
 - [ ] Device `params`: objects **stringified**, id-arrays/scalars **native**. (§4.3)
 - [ ] Device `Content-Type: application/aesjson-jd; charset=utf-8`, body is Base64 of ciphertext.
 - [ ] Validate the echoed `rid` on every response. (§2.1)
-- [ ] Reconnect-and-retry-once on 403 / `TOKEN_INVALID`, **single-flight** across contexts. (§2.5)
+- [ ] On 403 / `TOKEN_INVALID`: reconnect-and-retry-once, then **full re-login**-and-retry-once
+      before giving up, all **single-flight** across contexts. The re-login fallback is what recovers
+      a desynced server-token chain (e.g. after an MV3 worker is killed mid-reconnect). (§2.5)
 - [ ] Backoff on `OVERLOAD`/`TOO_MANY_REQUESTS`. (§6.4)
 - [ ] Never persist the plaintext password longer than needed.

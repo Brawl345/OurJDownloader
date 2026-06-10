@@ -1,3 +1,7 @@
+## v2.0.3
+
+* Hopefully fix session disconnects again
+
 ## v2.0.2
 
 * Fix session disconnects again

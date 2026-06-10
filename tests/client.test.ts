@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing';
 import { deviceCall, serverCall } from '../lib/api/client';
-import { aesEncrypt, chainServerToken, deviceToken } from '../lib/api/crypto';
-import { setSession } from '../lib/api/session';
+import {
+  aesEncrypt,
+  chainServerToken,
+  deviceToken,
+  initialServerToken,
+  loginSecret,
+} from '../lib/api/crypto';
+import { setCredentials, setSession } from '../lib/api/session';
 import type { SessionState } from '../lib/api/types';
 
 const SESSION: SessionState = {
@@ -133,6 +139,51 @@ describe('concurrent reconnect is coalesced (single-flight)', () => {
     expect(a.list).toEqual([]);
     expect(b.list).toEqual([]);
     expect(reconnectCalls).toBe(1);
+  });
+});
+
+describe('serverCall recovers from a desynced session via full re-login', () => {
+  it('falls back to /my/connect when a call still fails after a reconnect', async () => {
+    const credentials = { email: 'foo@bar.com', password: 'pw' };
+    await setCredentials(credentials);
+
+    const login = await loginSecret(credentials.email, credentials.password);
+    const reconnectSession = 'a1'.repeat(32);
+    const connectSession = 'b1'.repeat(32);
+
+    // Reconnect HTTP-succeeds but its chained token is rejected (simulating a
+    // desynced chain), so the retry must fall back to a fresh handshake.
+    const reconnectBody = await encryptWith(SESSION.serverToken, {
+      sessiontoken: reconnectSession,
+      regaintoken: 'a2'.repeat(32),
+    });
+    const connectBody = await encryptWith(login, {
+      sessiontoken: connectSession,
+      regaintoken: 'b2'.repeat(32),
+    });
+    const freshToken = await initialServerToken(login, connectSession);
+    const listBody = await encryptWith(freshToken, {
+      list: [{ id: 'd1', name: 'PC', type: 'jd' }],
+    });
+
+    let listCalls = 0;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes('/my/connect')) return response(200, connectBody);
+      if (url.includes('/my/reconnect')) return response(200, reconnectBody);
+      listCalls += 1;
+      // Original session and the (desynced) reconnected session both fail.
+      if (listCalls <= 2) return response(403);
+      return response(200, listBody);
+    });
+
+    const result = await serverCall<{ list: { id: string }[] }>(
+      '/my/listdevices',
+    );
+
+    expect(result.list[0]?.id).toBe('d1');
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes('/my/reconnect'))).toBe(true);
+    expect(urls.some((u) => u.includes('/my/connect'))).toBe(true);
   });
 });
 

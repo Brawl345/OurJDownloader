@@ -44,7 +44,8 @@ Read in order if you are implementing from scratch:
 
 5. **Sessions are short-lived.** On any `TOKEN_INVALID`/HTTP 403, call `/my/reconnect` (with your
    `regaintoken` **and** the `appkey`) to get a fresh `sessiontoken`. Reconnect must be single-flight
-   — the `regaintoken` is single-use (see §2.3/§2.5).
+   — the `regaintoken` is single-use. If reconnect can't restore a working session, fall back to a
+   full `/my/connect` re-login (see §2.3/§2.5).
 
 ## API root
 

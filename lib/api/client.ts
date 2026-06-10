@@ -169,30 +169,60 @@ function reconnect(stale: SessionState): Promise<SessionState | null> {
   });
 }
 
-// Run an API call with reactive reconnect+retry-once on token errors and
-// exponential backoff on overload (docs §6.1, §6.4).
+// Coalesced full re-login: the recovery of last resort when reconnect can't
+// restore a usable session. Because the serverToken chains across reconnects
+// (docs §1.4.1), a single interruption (e.g. the MV3 service worker being killed
+// mid-reconnect, before the rotated token is persisted) desyncs the chain — from
+// then on every reconnect HTTP-succeeds but yields a token the server rejects. A
+// fresh /my/connect resets the chain to its stateless initial value. Held under
+// the same lock and guarded by a storage re-check so concurrent calls don't each
+// fire a redundant handshake.
+function recoverViaSignIn(stale: SessionState): Promise<SessionState | null> {
+  return withReconnectLock(async () => {
+    const current = await getSession();
+    if (current && current.sessiontoken !== stale.sessiontoken) return current;
+    await signIn();
+    return getSession();
+  });
+}
+
+// Run an API call with reactive recovery on token errors and exponential backoff
+// on overload (docs §6.1, §6.4). Recovery escalates: reconnect once, then fall
+// back to a full re-login once. Both popup and background self-heal this way, so
+// a desynced session never requires a manual sign-in from the options page.
 async function withSession<T>(
   doCall: (session: SessionState) => Promise<T>,
 ): Promise<T> {
   let session = await getSession();
   if (!session) throw new SessionError('Not signed in');
 
-  let reconnected = false;
+  let triedReconnect = false;
+  let triedReSignIn = false;
   let backoffAttempts = 0;
 
   while (true) {
     try {
       return await doCall(session);
     } catch (error) {
-      if (isTokenError(error) && !reconnected) {
-        reconnected = true;
-        const next = await reconnect(session);
-        if (!next) {
-          await clearSession();
-          throw new SessionError('Session reconnect failed');
+      if (isTokenError(error)) {
+        if (!triedReconnect) {
+          triedReconnect = true;
+          const next = await reconnect(session);
+          if (next) {
+            session = next;
+            continue;
+          }
         }
-        session = next;
-        continue;
+        if (!triedReSignIn) {
+          triedReSignIn = true;
+          const fresh = await recoverViaSignIn(session);
+          if (fresh) {
+            session = fresh;
+            continue;
+          }
+          await clearSession();
+          throw new SessionError('Session recovery failed');
+        }
       }
       if (isBackoffError(error) && backoffAttempts < MAX_BACKOFF_ATTEMPTS) {
         await delay(500 * 2 ** backoffAttempts);

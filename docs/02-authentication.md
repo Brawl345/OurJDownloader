@@ -125,8 +125,15 @@ A session goes stale quickly. Recover **reactively** — detect failure *from th
 - HTTP **403**, or
 - a decrypted error body with `type == "TOKEN_INVALID"` (or `"SESSION"` / `"SESSION_EXPIRED"`),
 
-then call `/my/reconnect` and **retry the original request once**. If the retry still fails, clear
-the session and require a fresh `/my/connect`.
+then **escalate the recovery**: call `/my/reconnect` and retry the original request once; if that
+retry still fails, fall back to a full `/my/connect` (re-login from stored credentials) and retry
+once more. Only if the fresh login also fails do you clear the session and require manual sign-in.
+
+The full-login fallback is essential, not optional. The `serverEncryptionToken` chains statefully
+(§1.4.1), so a single interruption — e.g. an MV3 service worker killed after the reconnect rotated
+the server's chain but before the new token was persisted — leaves the chain desynced. From then on
+every reconnect HTTP-succeeds yet yields a token the server rejects, so reconnect-and-retry can never
+recover. A fresh `/my/connect` resets the chain to its stateless initial value and is the only escape.
 
 Reactive handling is correct because the real expiry is server-controlled. A proactive "reconnect
 after ~30 s idle" timer is **not** used: it manufactures extra reconnects (each one a rotation that
@@ -149,15 +156,25 @@ already rotated it, reuse that fresh session instead of spending the `regaintoke
 
 ```
 function apiCall(...):
-    try:
-        resp = doRequest(...)
-        if httpStatus == 403 or resp.error.type in {TOKEN_INVALID, SESSION, SESSION_EXPIRED}:
-            reconnect()            # single-flight: lock + re-read session, see above
-            resp = doRequest(...)   # retry once with the rotated tokens
-        return resp
-    on reconnect-failure:
-        clearSession(); raise NeedLogin
+    triedReconnect = triedReLogin = false
+    loop:
+        try:
+            return doRequest(...)
+        on (httpStatus == 403 or error.type in {TOKEN_INVALID, SESSION, SESSION_EXPIRED}):
+            if not triedReconnect:
+                triedReconnect = true
+                if reconnect():    # single-flight: lock + re-read session, see above
+                    continue       # retry with the rotated tokens
+            if not triedReLogin:
+                triedReLogin = true
+                if reLogin():      # single-flight full /my/connect; resets the chain
+                    continue       # retry with the fresh session
+                clearSession(); raise NeedLogin
+            raise                  # even a fresh login didn't help
 ```
+
+Both `reconnect()` and `reLogin()` are single-flight (lock + re-read session) so concurrent calls
+across popup and background don't each spend the `regaintoken` or fire a redundant handshake.
 
 ## 2.6 What to persist
 
