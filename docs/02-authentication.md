@@ -77,8 +77,10 @@ echo "$resp" | base64 -d | openssl enc -aes-128-cbc -d -K "$KEY" -iv "$IV"
 
 ## 2.3 `/my/reconnect` — refresh the session
 
-Use when the session went stale (timeout, `TOKEN_INVALID`, or HTTP 403). Obtains a **new**
-`sessiontoken`/`regaintoken` without credentials.
+Use when a call failed with `TOKEN_INVALID`, i.e. the session is still alive server-side but the
+encryption-token chain desynced. Obtains a **new** `sessiontoken`/`regaintoken` without credentials.
+It does **not** help against a *dead* session (`AUTH_FAILED`, see §2.5) — the reconnect itself then
+fails with `AUTH_FAILED` too.
 
 ```
 GET https://api.jdownloader.org/my/reconnect?appkey=<appkey>&sessiontoken=<cur>&regaintoken=<cur>&rid=<rid>&signature=<sig>
@@ -120,20 +122,28 @@ GET https://api.jdownloader.org/my/disconnect?sessiontoken=<cur>&rid=<rid>&signa
 
 ## 2.5 Session lifecycle & when to reconnect
 
-A session goes stale quickly. Recover **reactively** — detect failure *from the actual response*:
+A session goes stale eventually. Recover **reactively** — detect failure *from the actual response*.
+The live server distinguishes two failure classes (verified empirically against the real API; both
+arrive as HTTP 403 with a **plaintext** JSON error body):
 
-- HTTP **403**, or
-- a decrypted error body with `type == "TOKEN_INVALID"` (or `"SESSION"` / `"SESSION_EXPIRED"`),
+- **`TOKEN_INVALID`** — the session is still alive, but the request signature / encryption token is
+  wrong (a desynced server-token chain, §1.4.1). Recoverable via `/my/reconnect`.
+- **`AUTH_FAILED`** — the session is **dead** server-side (expired, rotated away by another
+  reconnect whose result was lost, unknown sessiontoken). `/my/reconnect` also fails with
+  `AUTH_FAILED` here; only a full `/my/connect` recovers. This is the case that actually occurs
+  after long idle in the wild.
 
-then **escalate the recovery**: call `/my/reconnect` and retry the original request once; if that
-retry still fails, fall back to a full `/my/connect` (re-login from stored credentials) and retry
-once more. Only if the fresh login also fails do you clear the session and require manual sign-in.
+So **escalate the recovery**: on `TOKEN_INVALID` (or `SESSION`/`SESSION_EXPIRED`) call
+`/my/reconnect` and retry the original request once; on `AUTH_FAILED` from a session-scoped call —
+or if the reconnect path didn't recover — fall back to a full `/my/connect` (re-login from stored
+credentials) and retry once more. Only if the fresh login also fails do you clear the session and
+require manual sign-in. Genuinely wrong credentials still surface, because then `/my/connect` itself
+fails with `AUTH_FAILED`.
 
-The full-login fallback is essential, not optional. The `serverEncryptionToken` chains statefully
-(§1.4.1), so a single interruption — e.g. an MV3 service worker killed after the reconnect rotated
-the server's chain but before the new token was persisted — leaves the chain desynced. From then on
-every reconnect HTTP-succeeds yet yields a token the server rejects, so reconnect-and-retry can never
-recover. A fresh `/my/connect` resets the chain to its stateless initial value and is the only escape.
+The full-login fallback is essential, not optional: a single lost rotation — e.g. an MV3 service
+worker killed after the reconnect rotated the server's session but before the new tokens were
+persisted — leaves you holding a dead session that no reconnect can revive. A fresh `/my/connect`
+creates a new session and resets the token chain to its stateless initial value.
 
 Reactive handling is correct because the real expiry is server-controlled. A proactive "reconnect
 after ~30 s idle" timer is **not** used: it manufactures extra reconnects (each one a rotation that
@@ -160,8 +170,8 @@ function apiCall(...):
     loop:
         try:
             return doRequest(...)
-        on (httpStatus == 403 or error.type in {TOKEN_INVALID, SESSION, SESSION_EXPIRED}):
-            if not triedReconnect:
+        on (error.type in {TOKEN_INVALID, SESSION, SESSION_EXPIRED, AUTH_FAILED}):
+            if tokenError and not triedReconnect:   # AUTH_FAILED skips this: session is dead
                 triedReconnect = true
                 if reconnect():    # single-flight: lock + re-read session, see above
                     continue       # retry with the rotated tokens

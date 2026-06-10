@@ -1,3 +1,7 @@
+## v2.0.4
+
+* Fix session disconnects for real: the server answers dead sessions with `AUTH_FAILED` (not `TOKEN_INVALID`), which bypassed the entire recovery logic - now recovered with an automatic re-login
+
 ## v2.0.3
 
 * Hopefully fix session disconnects again

@@ -10,8 +10,8 @@ This file ties everything together. If you implement the steps here, you have a 
 3. compute serverEncryptionToken, deviceEncryptionToken   (§1.4)
 4. /my/listdevices → pick a deviceId           (§3.2)
 5. device calls (addLinks, queryLinks, start…) (§4, §5)
-   ↳ on 403/TOKEN_INVALID → /my/reconnect (single-flight), retry; if still failing → full
-     /my/connect re-login, retry  (§2.3, §2.5)
+   ↳ on TOKEN_INVALID → /my/reconnect (single-flight), retry; on AUTH_FAILED (dead session)
+     or if still failing → full /my/connect re-login, retry  (§2.3, §2.5)
 6. /my/disconnect when done                    (§2.4)
 ```
 
@@ -54,7 +54,7 @@ resp = http_post(".../t_" + sessiontoken + "_" + deviceId + "/linkgrabberv2/addL
                  headers={ "Content-Type": "application/aesjson-jd; charset=utf-8" }, body=body)
 result = json(aes_decrypt(deviceEncToken, resp))      # { data: {...}, rid }
 
-# --- reconnect (on 403/TOKEN_INVALID; single-flight, see §2.5) ---
+# --- reconnect (on TOKEN_INVALID only — AUTH_FAILED needs a full re-connect; single-flight, §2.5) ---
 rid   = now_ms()
 query = "appkey=" + appkey + "&sessiontoken=" + sessiontoken + "&regaintoken=" + regaintoken + "&rid=" + rid
 sig   = hmac_sha256_hex(serverEncToken, "/my/reconnect?" + query)     # CURRENT server token
@@ -157,8 +157,9 @@ aes_dec "$resp" "$device_token" | jq .
 - [ ] Device `params`: objects **stringified**, id-arrays/scalars **native**. (§4.3)
 - [ ] Device `Content-Type: application/aesjson-jd; charset=utf-8`, body is Base64 of ciphertext.
 - [ ] Validate the echoed `rid` on every response. (§2.1)
-- [ ] On 403 / `TOKEN_INVALID`: reconnect-and-retry-once, then **full re-login**-and-retry-once
-      before giving up, all **single-flight** across contexts. The re-login fallback is what recovers
-      a desynced server-token chain (e.g. after an MV3 worker is killed mid-reconnect). (§2.5)
+- [ ] On `TOKEN_INVALID`: reconnect-and-retry-once, then **full re-login**-and-retry-once. On
+      `AUTH_FAILED` from a session call (dead session — what actually happens after long idle):
+      skip the reconnect, go straight to the full re-login. All recovery **single-flight** across
+      contexts. (§2.5, §6.3)
 - [ ] Backoff on `OVERLOAD`/`TOO_MANY_REQUESTS`. (§6.4)
 - [ ] Never persist the plaintext password longer than needed.

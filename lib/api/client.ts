@@ -12,6 +12,7 @@ import {
 } from './crypto';
 import {
   ApiError,
+  isAuthError,
   isBackoffError,
   isTokenError,
   parseErrorShape,
@@ -186,10 +187,17 @@ function recoverViaSignIn(stale: SessionState): Promise<SessionState | null> {
   });
 }
 
-// Run an API call with reactive recovery on token errors and exponential backoff
-// on overload (docs §6.1, §6.4). Recovery escalates: reconnect once, then fall
-// back to a full re-login once. Both popup and background self-heal this way, so
-// a desynced session never requires a manual sign-in from the options page.
+// Run an API call with reactive recovery on session errors and exponential
+// backoff on overload (docs §6.1, §6.4). The live server distinguishes two
+// failure classes (verified empirically 2026-06 — the docs got this wrong):
+//   - TOKEN_INVALID: the session is still alive but our serverToken/signature
+//     is wrong (chain desync) → a reconnect can rotate us back in.
+//   - AUTH_FAILED on a session-scoped call: the session is dead server-side
+//     (expired/rotated/unknown) → reconnect would also AUTH_FAIL, so go
+//     straight to a full re-login. Genuinely wrong credentials still surface,
+//     because then /my/connect itself throws AUTH_FAILED.
+// Both popup and background self-heal this way, so a dead session never
+// requires a manual sign-in from the options page.
 async function withSession<T>(
   doCall: (session: SessionState) => Promise<T>,
 ): Promise<T> {
@@ -204,8 +212,8 @@ async function withSession<T>(
     try {
       return await doCall(session);
     } catch (error) {
-      if (isTokenError(error)) {
-        if (!triedReconnect) {
+      if (isTokenError(error) || isAuthError(error)) {
+        if (isTokenError(error) && !triedReconnect) {
           triedReconnect = true;
           const next = await reconnect(session);
           if (next) {

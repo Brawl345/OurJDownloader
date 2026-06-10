@@ -33,9 +33,9 @@ An error can surface two ways:
 
 | Type | Meaning / typical cause | Recommended handling |
 |------|-------------------------|----------------------|
-| `TOKEN_INVALID` | Session/encryption token no longer valid. | **Reconnect** (`/my/reconnect`) and retry once; else re-`connect`. |
+| `TOKEN_INVALID` | The session is still alive but the request signature/encryption token is wrong (e.g. a desynced server-token chain). | **Reconnect** (`/my/reconnect`) and retry once; else re-`connect`. |
 | `SESSION` / `SESSION_EXPIRED` | Session expired. | Same as `TOKEN_INVALID`. |
-| `AUTH_FAILED` | Wrong email/password during connect. | Surface to user; do not retry. |
+| `AUTH_FAILED` | Two distinct cases (verified against the live API): from `/my/connect` it means wrong email/password; from any **session-scoped call** (incl. `/my/reconnect`) it means the session is **dead server-side** (expired, rotated away, unknown sessiontoken). | From `/my/connect`: surface to user, do not retry. From a session call: re-`connect` once (a reconnect would also fail with `AUTH_FAILED`). |
 | `CHALLENGE_FAILED` | Signature/handshake mismatch. | Check your signing (exact query string, correct token bytes). |
 | `EMAIL_INVALID` / `EMAIL_FORBIDDEN` | Bad/blocked email. | User error. |
 | `ERROR_EMAIL_NOT_CONFIRMED` | Account email not confirmed. | User must confirm. |
@@ -55,12 +55,15 @@ An error can surface two ways:
 
 ## 6.4 Recommended handling summary
 
-- On **`403`** or **`TOKEN_INVALID`/`SESSION`/`SESSION_EXPIRED`** → reconnect, retry once, then
-  require fresh login. (See §2.5.)
+- On **`TOKEN_INVALID`/`SESSION`/`SESSION_EXPIRED`** → reconnect, retry once, then fall back to a
+  fresh login. (See §2.5.)
+- On **`AUTH_FAILED` from a session-scoped call** → the session is dead; skip the reconnect and do
+  one fresh `/my/connect` from stored credentials, then retry.
 - On **`OVERLOAD`/`TOO_MANY_REQUESTS`/`MAINTENANCE`/`INTERNAL_SERVER_ERROR`** → exponential backoff.
 - On **`BAD_PARAMETERS`** → almost always your `params` encoding; verify objects are stringified and
   id-arrays are native (§4.3).
-- On **`AUTH_FAILED`** and email errors → do **not** retry; these are user-correctable.
+- On **`AUTH_FAILED` from `/my/connect`** and email errors → do **not** retry; these are
+  user-correctable.
 
 ## 6.5 Failure modes that look like errors but aren't returned as one
 

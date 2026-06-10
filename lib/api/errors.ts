@@ -22,7 +22,10 @@ const BACKOFF_ERROR_TYPES = new Set([
   'INTERNAL_SERVER_ERROR',
 ]);
 
-// Authentication errors the user must fix; never auto-retry (docs §6.4).
+// Authentication errors. From /my/connect these are user-correctable (wrong
+// credentials) and must never be auto-retried. The live server also returns
+// AUTH_FAILED for any session-scoped call whose session is dead server-side
+// (expired/rotated) — withSession recovers that case with one full re-login.
 const AUTH_ERROR_TYPES = new Set([
   'AUTH_FAILED',
   'EMAIL_INVALID',

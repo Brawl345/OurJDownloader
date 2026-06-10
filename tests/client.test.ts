@@ -187,6 +187,59 @@ describe('serverCall recovers from a desynced session via full re-login', () => 
   });
 });
 
+// The live server answers session-scoped calls on a DEAD session (expired or
+// rotated away) with 403 {"src":"MYJD","type":"AUTH_FAILED"} — not
+// TOKEN_INVALID (verified against the real API, 2026-06). A reconnect would
+// also AUTH_FAIL, so recovery must go straight to a full re-login.
+describe('serverCall recovers from a dead session (AUTH_FAILED)', () => {
+  const AUTH_FAILED_BODY = JSON.stringify({ src: 'MYJD', type: 'AUTH_FAILED' });
+
+  it('re-logins without trying a reconnect, then retries the call', async () => {
+    const credentials = { email: 'foo@bar.com', password: 'pw' };
+    await setCredentials(credentials);
+
+    const login = await loginSecret(credentials.email, credentials.password);
+    const connectSession = 'b1'.repeat(32);
+    const connectBody = await encryptWith(login, {
+      sessiontoken: connectSession,
+      regaintoken: 'b2'.repeat(32),
+    });
+    const freshToken = await initialServerToken(login, connectSession);
+    const listBody = await encryptWith(freshToken, {
+      list: [{ id: 'd1', name: 'PC', type: 'jd' }],
+    });
+
+    fetchMock.mockImplementation(async (url: string) => {
+      if (url.includes('/my/connect')) return response(200, connectBody);
+      if (url.includes(`sessiontoken=${SESSION.sessiontoken}`))
+        return response(403, AUTH_FAILED_BODY);
+      return response(200, listBody);
+    });
+
+    const result = await serverCall<{ list: { id: string }[] }>(
+      '/my/listdevices',
+    );
+
+    expect(result.list[0]?.id).toBe('d1');
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes('/my/connect'))).toBe(true);
+    expect(urls.some((u) => u.includes('/my/reconnect'))).toBe(false);
+  });
+
+  it('surfaces AUTH_FAILED when the credentials themselves are wrong', async () => {
+    await setCredentials({ email: 'foo@bar.com', password: 'wrong' });
+
+    fetchMock.mockResolvedValue(response(403, AUTH_FAILED_BODY));
+
+    await expect(serverCall('/my/listdevices')).rejects.toMatchObject({
+      type: 'AUTH_FAILED',
+    });
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+    // Exactly one recovery attempt: the failing call, then /my/connect.
+    expect(urls.filter((u) => u.includes('/my/connect'))).toHaveLength(1);
+  });
+});
+
 describe('serverCall backoff (docs §6.4)', () => {
   it('retries after an OVERLOAD/429 without reconnecting', async () => {
     const listBody = await encryptWith(SESSION.serverToken, { list: [] });
